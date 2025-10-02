@@ -56,7 +56,13 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // encrypt password
-        user.setRole(request.getRole());
+        //check the role
+        String role= String.valueOf(request.getRole());
+        if (role.equalsIgnoreCase("ADMIN")){
+            throw new IllegalArgumentException("Registration as ADMIN is restricted");
+        }else{
+            user.setRole(request.getRole());
+        }
         user.setAddress(request.getAddress());
         user.setStatus(request.isStatus());
         user.setCreatedAt(LocalDateTime.now());
