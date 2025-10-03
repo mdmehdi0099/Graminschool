@@ -135,6 +135,10 @@ public class UserService {
         }else{
             throw new IllegalArgumentException("Unsupported file format. Only .xlsx,.csv are allowed.");
         }
+        // Encrypt passwords
+        users.forEach(user ->
+                user.setPassword(passwordEncoder.encode(user.getPassword()))
+        );
         return userRepository.saveAll(users);
 
     }

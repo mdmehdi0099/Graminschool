@@ -2,21 +2,27 @@ package com.GraminSchool.utility;
 
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.ClientInfoStatus;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ExcelCsvHelperUserRegistration {
 
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
+
+    public ExcelCsvHelperUserRegistration(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     //parse excel file(.xlsx)
     public static List<User> parseExcel(InputStream inputStream) throws IOException {
@@ -31,7 +37,15 @@ public class ExcelCsvHelperUserRegistration {
             User user=new User();
             user.setName(row.getCell(0).getStringCellValue());
             user.setEmail(row.getCell(1).getStringCellValue());
-            user.setPhone(row.getCell(2).getStringCellValue());
+            String phone;
+            Cell cell = row.getCell(2);
+            if (cell.getCellType() == CellType.NUMERIC) {
+                // Convert numeric to string (avoid .0 issue by using DataFormatter)
+                phone = new DataFormatter().formatCellValue(cell);
+            } else {
+                phone = cell.getStringCellValue();
+            }
+            user.setPhone(phone);
             user.setPassword(row.getCell(3).getStringCellValue());
             String role=row.getCell(4).getStringCellValue();
             if (role.equalsIgnoreCase("ADMIN")){
@@ -40,7 +54,17 @@ public class ExcelCsvHelperUserRegistration {
                 user.setRole(Role.valueOf(row.getCell(4).getStringCellValue()));
             }
             user.setAddress(row.getCell(5).getStringCellValue());
-            user.setStatus(Boolean.parseBoolean(row.getCell(6).getStringCellValue()));
+
+            Cell cell2 = row.getCell(6);
+            boolean status;
+            if (cell2.getCellType() == CellType.BOOLEAN) {
+                status = cell2.getBooleanCellValue();
+            } else {
+                status = Boolean.parseBoolean(cell2.getStringCellValue());
+            }
+            user.setStatus(status);
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
             userlist.add(user);
         }
         workbook.close();
