@@ -2,14 +2,18 @@ package com.GraminSchool.controllers;
 
 import com.GraminSchool.entity.User;
 import com.GraminSchool.models.RegisterResponse;
+import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
@@ -54,7 +58,30 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    //Admin will be Creating the Agent users
+    @PostMapping("/create-bulk-Agent-user")
+    public ResponseEntity<List<BulkUserRegistrationResponse>> registerBulkUser(@RequestParam("file") MultipartFile file) {
+        try {
+            List<User> savedUsers = userService.saveUsersFromFile(file);
 
+            // Convert to response DTO
+            List<BulkUserRegistrationResponse> responseList = savedUsers.stream()
+                    .map(user -> new BulkUserRegistrationResponse(
+                            user.getName(),
+                            user.getEmail(),
+                            user.getPhone(),
+                            user.getRole(),
+                            user.getAddress(),
+                            user.isStatus()
+                    ))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(responseList);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }catch (IOException e){
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
 
 }

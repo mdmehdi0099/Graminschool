@@ -9,12 +9,15 @@ import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.repo.UserRepository;
 import com.GraminSchool.security.JwtHelper;
+import com.GraminSchool.utility.ExcelCsvHelperUserRegistration;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -120,6 +123,23 @@ public class UserService {
 
         return new UserRegistrationResponse(savedUser.getEmail(),savedUser.getRole().name());
     }
+    //bulk user registration by admin
+    public List<User> saveUsersFromFile(MultipartFile file) throws IOException {
+        String filename=file.getOriginalFilename();
+        List<User> users;
+
+        if (filename.endsWith(".xlsx")){
+            users= ExcelCsvHelperUserRegistration.parseExcel(file.getInputStream());
+        }else if(filename.endsWith(".csv")){
+            users=ExcelCsvHelperUserRegistration.parseCSV(file.getInputStream());
+        }else{
+            throw new IllegalArgumentException("Unsupported file format. Only .xlsx,.csv are allowed.");
+        }
+        return userRepository.saveAll(users);
+
+    }
+
+
 
     public JwtResponse loginUser(JwtRequest request) {
         // 1. Find user by email (username)
