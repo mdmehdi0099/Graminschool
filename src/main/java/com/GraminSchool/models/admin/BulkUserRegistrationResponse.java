@@ -16,5 +16,6 @@ public class BulkUserRegistrationResponse {
     private Role role;
     private String address;
     private boolean status;
+    private String errorMessage; // <-- for failed user rows
 
 }
