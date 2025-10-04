@@ -6,6 +6,7 @@ import com.GraminSchool.entity.User;
 import com.GraminSchool.models.JwtRequest;
 import com.GraminSchool.models.JwtResponse;
 import com.GraminSchool.models.RegisterResponse;
+import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.repo.UserRepository;
 import com.GraminSchool.security.JwtHelper;
@@ -19,7 +20,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserService {
@@ -124,24 +128,233 @@ public class UserService {
         return new UserRegistrationResponse(savedUser.getEmail(),savedUser.getRole().name());
     }
     //bulk user registration by admin
-    public List<User> saveUsersFromFile(MultipartFile file) throws IOException {
-        String filename=file.getOriginalFilename();
-        List<User> users;
+    public Map<String, Object> saveUsersFromFile(MultipartFile file) throws IOException {
+        String filename = file.getOriginalFilename();
+        List<User> users = new ArrayList<>();
+        List<FailedUserRow> failedRows = new ArrayList<>();
 
-        if (filename.endsWith(".xlsx")){
-            users= ExcelCsvHelperUserRegistration.parseExcel(file.getInputStream());
-        }else if(filename.endsWith(".csv")){
-            users=ExcelCsvHelperUserRegistration.parseCSV(file.getInputStream());
-        }else{
+        if (filename.endsWith(".xlsx")) {
+            try {
+                users = ExcelCsvHelperUserRegistration.parseExcel(file.getInputStream());
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException("Error while parsing Excel file: " + e.getMessage());
+            }
+        } else if (filename.endsWith(".csv")) {
+            try {
+                users = ExcelCsvHelperUserRegistration.parseCSV(file.getInputStream());
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException("Error while parsing CSV file: " + e.getMessage());
+            }
+        } else {
             throw new IllegalArgumentException("Unsupported file format. Only .xlsx,.csv are allowed.");
         }
-        // Encrypt passwords
-        users.forEach(user ->
+
+        // Validate each user before saving
+        int rowNumber = 1; // start after header row
+        List<User> validUsers = new ArrayList<>();
+
+        for (User user : users) {
+            try {
+                if (user.getName() == null || user.getName().isEmpty())
+                    throw new IllegalArgumentException("Name is missing");
+                if (user.getEmail() == null || user.getEmail().isEmpty())
+                    throw new IllegalArgumentException("Email is missing");
+                if (user.getPhone() == null || user.getPhone().isEmpty())
+                    throw new IllegalArgumentException("Phone is missing");
+                if (user.getRole() == null)
+                    throw new IllegalArgumentException("Role is missing");
+                if (user.getAddress() == null || user.getAddress().isEmpty())
+                    throw new IllegalArgumentException("Address is missing");
+                if (user.getRole().toString().equalsIgnoreCase("ADMIN")) {
+                    throw new IllegalArgumentException("Admin user registration is restricted");
+                }
+
+                // Passed validation → keep user for saving
+                validUsers.add(user);
+
+            } catch (Exception e) {
+                failedRows.add(new FailedUserRow(
+                        rowNumber + 1,
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getRole() != null ? user.getRole().toString() : null,
+                        user.getAddress(),
+                        String.valueOf(user.isStatus()),
+                        e.getMessage()
+                ));
+            }
+            rowNumber++;
+        }
+
+        // 🔹 Step 1: If validation failed, stop and return only failed rows
+        if (!failedRows.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("failedRows", failedRows);
+            result.put("message", "Some records failed validation. Please fix and reupload.");
+            return result;
+        }
+
+        // 🔹 Step 2: Encrypt passwords
+        validUsers.forEach(user ->
                 user.setPassword(passwordEncoder.encode(user.getPassword()))
         );
-        return userRepository.saveAll(users);
 
+        // 🔹 Step 3: Try saving users one by one to catch DB-level errors (like duplicate email/phone)
+        List<User> savedUsers = new ArrayList<>();
+        for (int i = 0; i < validUsers.size(); i++) {
+            User user = validUsers.get(i);
+            try {
+                User saved = userRepository.save(user);
+                savedUsers.add(saved);
+            } catch (Exception e) {
+                failedRows.add(new FailedUserRow(
+                        i + 2, // Excel row number (header skipped)
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getRole() != null ? user.getRole().toString() : null,
+                        user.getAddress(),
+                        String.valueOf(user.isStatus()),
+                        "Database error: " + e.getMessage()
+                ));
+            }
+        }
+
+        // 🔹 Step 4: Return appropriate result
+        Map<String, Object> result = new HashMap<>();
+        if (!failedRows.isEmpty()) {
+            result.put("success", false);
+            result.put("failedRows", failedRows);
+            result.put("message", "Some records failed during save. Please review errors.");
+        } else {
+            result.put("success", true);
+            result.put("savedUsers", savedUsers);
+            result.put("message", "All users registered successfully.");
+        }
+
+        return result;
     }
+
+    //bulk normal user registration by admin
+    public Map<String, Object> saveUsersFromFileForNormalUser(MultipartFile file) throws IOException {
+        String filename = file.getOriginalFilename();
+        List<User> users = new ArrayList<>();
+        List<FailedUserRow> failedRows = new ArrayList<>();
+
+        if (filename.endsWith(".xlsx")) {
+            try {
+                users = ExcelCsvHelperUserRegistration.parseExcelForNormalUser(file.getInputStream());
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException("Error while parsing Excel file: " + e.getMessage());
+            }
+        } else if (filename.endsWith(".csv")) {
+            try {
+                users = ExcelCsvHelperUserRegistration.parseCSV(file.getInputStream());
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException("Error while parsing CSV file: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported file format. Only .xlsx,.csv are allowed.");
+        }
+
+        // Validate each user before saving
+        int rowNumber = 1; // start after header row
+        List<User> validUsers = new ArrayList<>();
+
+        for (User user : users) {
+            try {
+                if (user.getName() == null || user.getName().isEmpty())
+                    throw new IllegalArgumentException("Name is missing");
+                if (user.getEmail() == null || user.getEmail().isEmpty())
+                    throw new IllegalArgumentException("Email is missing");
+                if (user.getPhone() == null || user.getPhone().isEmpty())
+                    throw new IllegalArgumentException("Phone is missing");
+                if (user.getRole() == null)
+                    throw new IllegalArgumentException("Role is missing");
+                if (user.getAddress() == null || user.getAddress().isEmpty())
+                    throw new IllegalArgumentException("Address is missing");
+                if (user.getRole().toString().equalsIgnoreCase("ADMIN")) {
+                    throw new IllegalArgumentException("Admin user registration is restricted");
+                }
+
+                // Passed validation → keep user for saving
+                validUsers.add(user);
+
+            } catch (Exception e) {
+                failedRows.add(new FailedUserRow(
+                        rowNumber + 1,
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getRole() != null ? user.getRole().toString() : null,
+                        user.getAddress(),
+                        String.valueOf(user.isStatus()),
+                        e.getMessage()
+                ));
+            }
+            rowNumber++;
+        }
+
+        // 🔹 Step 1: If validation failed, stop and return only failed rows
+        if (!failedRows.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("failedRows", failedRows);
+            result.put("message", "Some records failed validation. Please fix and reupload.");
+            return result;
+        }
+
+        // 🔹 Step 2: Encrypt passwords
+        validUsers.forEach(user ->
+                user.setPassword(passwordEncoder.encode(user.getPassword()))
+        );
+
+        // 🔹 Step 3: Try saving users one by one to catch DB-level errors (like duplicate email/phone)
+        List<User> savedUsers = new ArrayList<>();
+        for (int i = 0; i < validUsers.size(); i++) {
+            User user = validUsers.get(i);
+            try {
+                User saved = userRepository.save(user);
+                savedUsers.add(saved);
+            } catch (Exception e) {
+                failedRows.add(new FailedUserRow(
+                        i + 2, // Excel row number (header skipped)
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getRole() != null ? user.getRole().toString() : null,
+                        user.getAddress(),
+                        String.valueOf(user.isStatus()),
+                        "Database error: " + e.getMessage()
+                ));
+            }
+        }
+
+        // 🔹 Step 4: Return appropriate result
+        Map<String, Object> result = new HashMap<>();
+        if (!failedRows.isEmpty()) {
+            result.put("success", false);
+            result.put("failedRows", failedRows);
+            result.put("message", "Some records failed during save. Please review errors.");
+        } else {
+            result.put("success", true);
+            result.put("savedUsers", savedUsers);
+            result.put("message", "All users registered successfully.");
+        }
+
+        return result;
+    }
+
 
 
 

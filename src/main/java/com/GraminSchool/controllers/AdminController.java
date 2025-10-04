@@ -1,8 +1,10 @@
 package com.GraminSchool.controllers;
 
+import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
+import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -62,26 +65,121 @@ public class AdminController {
     @PostMapping("/create-bulk-Agent-user")
     public ResponseEntity<List<BulkUserRegistrationResponse>> registerBulkUser(@RequestParam("file") MultipartFile file) {
         try {
-            List<User> savedUsers = userService.saveUsersFromFile(file);
+            // Call service method (it now returns Map with both saved & failed rows)
+            Map<String, Object> result = userService.saveUsersFromFile(file);
 
-            // Convert to response DTO
-            List<BulkUserRegistrationResponse> responseList = savedUsers.stream()
-                    .map(user -> new BulkUserRegistrationResponse(
-                            user.getName(),
-                            user.getEmail(),
-                            user.getPhone(),
-                            user.getRole(),
-                            user.getAddress(),
-                            user.isStatus()
+            @SuppressWarnings("unchecked")
+            List<User> savedUsers = (List<User>) result.get("savedUsers");
+
+            @SuppressWarnings("unchecked")
+            List<FailedUserRow> failedUsers = (List<FailedUserRow>) result.get("failedRows");
+
+            // ✅ If no failures, return 200 OK
+            if (failedUsers == null || failedUsers.isEmpty()) {
+                List<BulkUserRegistrationResponse> responseList = savedUsers.stream()
+                        .map(user -> new BulkUserRegistrationResponse(
+                                user.getName(),
+                                user.getEmail(),
+                                user.getPhone(),
+                                user.getRole(),
+                                user.getAddress(),
+                                user.isStatus(),
+                                null // no error
+                        ))
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(responseList);
+            }
+
+            // ❌ If any failures, return 400 with failed records
+            List<BulkUserRegistrationResponse> failedResponseList = failedUsers.stream()
+                    .map(row -> new BulkUserRegistrationResponse(
+                            row.getName(),
+                            row.getEmail(),
+                            row.getPhone(),
+                            row.getRole() != null ? Role.valueOf(row.getRole()) : null,
+                            row.getAddress(),
+                            Boolean.parseBoolean(row.getStatus()),
+                            row.getErrorMessage()
                     ))
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(responseList);
+
+            return ResponseEntity.badRequest().body(failedResponseList);
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
-        }catch (IOException e){
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+
+    @PostMapping("/create-bulk-Normal-user")
+    public ResponseEntity<List<BulkUserRegistrationResponse>> registerBulkNormalUser(@RequestParam("file") MultipartFile file) {
+        try {
+            // Call service method (it now returns Map with both saved & failed rows)
+            Map<String, Object> result = userService.saveUsersFromFileForNormalUser(file);
+
+            @SuppressWarnings("unchecked")
+            List<User> savedUsers = (List<User>) result.get("savedUsers");
+
+            @SuppressWarnings("unchecked")
+            List<FailedUserRow> failedUsers = (List<FailedUserRow>) result.get("failedRows");
+
+            // ✅ If no failures, return 200 OK
+            if (failedUsers == null || failedUsers.isEmpty()) {
+                List<BulkUserRegistrationResponse> responseList = savedUsers.stream()
+                        .map(user -> new BulkUserRegistrationResponse(
+                                user.getName(),
+                                user.getEmail(),
+                                user.getPhone(),
+                                user.getRole(),
+                                user.getAddress(),
+                                user.isStatus(),
+                                null // no error
+                        ))
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(responseList);
+            }
+
+            // ❌ If any failures, return 400 with failed records
+            List<BulkUserRegistrationResponse> failedResponseList = failedUsers.stream()
+                    .map(row -> new BulkUserRegistrationResponse(
+                            row.getName(),
+                            row.getEmail(),
+                            row.getPhone(),
+                            row.getRole() != null ? Role.valueOf(row.getRole()) : null,
+                            row.getAddress(),
+                            Boolean.parseBoolean(row.getStatus()),
+                            row.getErrorMessage()
+                    ))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.badRequest().body(failedResponseList);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }
