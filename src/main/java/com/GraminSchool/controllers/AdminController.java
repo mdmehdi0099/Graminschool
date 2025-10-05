@@ -1,11 +1,13 @@
 package com.GraminSchool.controllers;
 
+import com.GraminSchool.entity.Courses;
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
+import com.GraminSchool.repo.CourseRepository;
 import com.GraminSchool.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,9 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CourseRepository courseRepository;
 
     //Getting the list of users
     @GetMapping("/user")
@@ -172,7 +177,14 @@ public class AdminController {
 
 
 
-
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<Courses> getCourseDetails(@PathVariable Long courseId) {
+        Courses course = courseRepository.findCourseWithFullHierarchy(courseId);
+        if (course == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(course);
+    }
 
 
 
