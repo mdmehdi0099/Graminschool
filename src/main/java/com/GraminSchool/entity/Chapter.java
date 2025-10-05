@@ -6,6 +6,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -36,7 +38,14 @@ public class Chapter {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    // ✅ Many chapters belong to one subject
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 
+    // ✅ One chapter has many topics
+    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Topic> topics = new ArrayList<>();
 
 
 }

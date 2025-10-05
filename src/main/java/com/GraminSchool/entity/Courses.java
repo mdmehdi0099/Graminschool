@@ -7,6 +7,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +20,7 @@ public class Courses {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="course_name",nullable = false)
+    @Column(name="course_name",nullable = false,unique = true)
     private String course_name;
     @Column(name="short_details",nullable = false)
     private String short_details;
@@ -45,7 +47,9 @@ public class Courses {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-
+    // ✅ Relationship
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Subject> subjects = new ArrayList<>();
 
 
 }

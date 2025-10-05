@@ -1,11 +1,16 @@
 package com.GraminSchool.controllers;
 
+import com.GraminSchool.entity.Courses;
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
-import com.GraminSchool.models.RegisterResponse;
+import com.GraminSchool.models.CourseResponse;
+import com.GraminSchool.models.SubjectResponse;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
+import com.GraminSchool.repo.CourseRepository;
+import com.GraminSchool.service.CourseService;
+import com.GraminSchool.service.SubjectService;
 import com.GraminSchool.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +29,15 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CourseService courseService;
+
+    @Autowired
+    private SubjectService subjectService;
+
+    @Autowired
+    private CourseRepository courseRepository;
 
     //Getting the list of users
     @GetMapping("/user")
@@ -172,7 +186,76 @@ public class AdminController {
 
 
 
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<Courses> getCourseDetails(@PathVariable Long courseId) {
+        Courses course = courseRepository.findCourseWithFullHierarchy(courseId);
+        if (course == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(course);
+    }
 
+//    @PostMapping("/create-course")
+//    public ResponseEntity<Courses> createCourses(@RequestBody CourseResponse courses){
+//        Courses createCourse=courseService.createCourses(courses);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createCourse);
+//    }
+
+    @PostMapping("/create-course")
+    public ResponseEntity<?> createCourse(@RequestBody CourseResponse request) {
+        try {
+            // Basic field validation (optional)
+            if (request.getCourse_name() == null || request.getCourse_name().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Course name is required.");
+            }
+            if (request.getShort_details() == null || request.getShort_details().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Short details are required.");
+            }
+            if (request.getCourse_description() == null || request.getCourse_description().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Course description is required.");
+            }
+            if (request.getPrice() <= 0) {
+                return ResponseEntity.badRequest().body("Price must be greater than zero.");
+            }
+
+            // Save course
+            Courses createdCourse = courseService.createCourses(request);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid input: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while creating course: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/create-Subject")
+    public ResponseEntity<?> createSubject(@RequestBody SubjectResponse Subjectrequest) {
+        try {
+            // Basic field validation (optional)
+            if (Subjectrequest.getName() == null || Subjectrequest.getName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("subject name is required.");
+            }
+            if (Subjectrequest.getDescription() == null || Subjectrequest.getDescription().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Description is required.");
+            }
+
+            // Save course
+            // ✅ Save subject through service
+            ResponseEntity<?> subject = subjectService.saveSubject(Subjectrequest);
+            //Subject subject = subjectService.saveSubject(Subjectrequest);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(subject);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid input: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while creating course: " + e.getMessage());
+        }
+    }
 
 
 
