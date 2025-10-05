@@ -2,10 +2,8 @@ package com.GraminSchool.controllers;
 
 import com.GraminSchool.entity.Courses;
 import com.GraminSchool.entity.Role;
-import com.GraminSchool.entity.Subject;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.models.CourseResponse;
-import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.models.SubjectResponse;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
@@ -245,7 +243,9 @@ public class AdminController {
             }
 
             // Save course
-            Subject subject = subjectService.createSubject(Subjectrequest);
+            // ✅ Save subject through service
+            ResponseEntity<?> subject = subjectService.saveSubject(Subjectrequest);
+            //Subject subject = subjectService.saveSubject(Subjectrequest);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(subject);
         } catch (IllegalArgumentException e) {

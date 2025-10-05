@@ -51,4 +51,5 @@ public class Courses {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Subject> subjects = new ArrayList<>();
 
+
 }
