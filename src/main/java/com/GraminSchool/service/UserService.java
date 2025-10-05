@@ -52,6 +52,41 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.jwtHelper=jwtHelper;
     }
+    public RegisterResponse registerAdminUser(User request) {
+        // check if email already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already registered!");
+        }
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setPassword(passwordEncoder.encode(request.getPassword())); // encrypt password
+        //check the role
+        String role= String.valueOf(request.getRole());
+        if (role.equalsIgnoreCase("ADMIN")){
+            //throw new IllegalArgumentException("Registration as ADMIN is restricted");
+            user.setRole(request.getRole());
+        }else{
+            user.setRole(request.getRole());
+        }
+        user.setAddress(request.getAddress());
+        user.setStatus(request.isStatus());
+        user.setCreatedAt(LocalDateTime.now());
+
+        User savedUser=userRepository.save(user);
+
+        //build UserDetails for token generation
+        UserDetails userDetails=org.springframework.security.core.userdetails.User
+                .withUsername(savedUser.getEmail())
+                .password(savedUser.getPassword())
+                .roles(savedUser.getRole().name())
+                .build();
+
+        String token=jwtHelper.generateToken(userDetails);
+        return new RegisterResponse(token,savedUser.getEmail(),savedUser.getRole().name());
+    }
     public RegisterResponse registerUser(User request) {
         // check if email already exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
