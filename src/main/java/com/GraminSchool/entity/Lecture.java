@@ -36,5 +36,9 @@ public class Lecture {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    // ✅ Many lectures belong to one topic
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
 
 }
