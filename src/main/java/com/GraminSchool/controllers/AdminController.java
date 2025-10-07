@@ -184,8 +184,6 @@ public class AdminController {
     }
 
 
-
-
     @GetMapping("/course/{courseId}")
     public ResponseEntity<Courses> getCourseDetails(@PathVariable Long courseId) {
         Courses course = courseRepository.findCourseWithFullHierarchy(courseId);

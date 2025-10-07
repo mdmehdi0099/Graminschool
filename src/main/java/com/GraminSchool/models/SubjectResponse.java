@@ -13,4 +13,6 @@ public class SubjectResponse {
     private boolean enable;
     private String Other;
     private Long course_id;
+
+
 }
