@@ -6,10 +6,7 @@ import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.repo.CourseRepository;
-import com.GraminSchool.service.ChapterService;
-import com.GraminSchool.service.CourseService;
-import com.GraminSchool.service.SubjectService;
-import com.GraminSchool.service.UserService;
+import com.GraminSchool.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +33,12 @@ public class AdminController {
 
     @Autowired
     private ChapterService chapterService;
+
+    @Autowired
+    private TopicService topicService;
+
+    @Autowired
+    private LectureService lectureService;
 
     @Autowired
     private CourseRepository courseRepository;
@@ -289,7 +292,49 @@ public class AdminController {
         }
     }
 
+    @PostMapping("/Create-Topic")
+    public ResponseEntity<?> createTopic(@RequestBody TopicRequest request) {
+        try {
+            // ✅ Basic validation
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Topic name is required.");
+            }
 
+            if (request.getChapter_id() == null) {
+                return ResponseEntity.badRequest().body("Chapter ID is required.");
+            }
+
+            TopicResponseDTO response = topicService.saveTopic(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error while creating topic: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/Create-Lecture")
+    public ResponseEntity<?> createLecture(@RequestBody LectureRequest request) {
+        try {
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Lecture name is required.");
+            }
+            if (request.getTopic_id() == null) {
+                return ResponseEntity.badRequest().body("Topic ID is required.");
+            }
+
+            LectureResponseDTO response = lectureService.saveLecture(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error while creating lecture: " + e.getMessage());
+        }
+    }
 
 
 

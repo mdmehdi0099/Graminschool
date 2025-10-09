@@ -19,7 +19,7 @@ public class Topic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="name",nullable = false)
+    @Column(name="name",nullable = false,unique = true)
     private String name;
     @Column(name="Image",nullable = true)
     private String image;
