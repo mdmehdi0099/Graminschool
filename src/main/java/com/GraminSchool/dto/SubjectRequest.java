@@ -1,11 +1,13 @@
-package com.GraminSchool.models;
+package com.GraminSchool.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class SubjectResponse {
+@Data
+public class SubjectRequest {
     private String name;
     private String description;
     private String InstructorName;

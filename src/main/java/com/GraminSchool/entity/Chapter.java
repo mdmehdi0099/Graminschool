@@ -19,7 +19,7 @@ public class Chapter {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="name",nullable = false)
+    @Column(name="name",nullable = false,unique = true)
     private String name;
     @Column(name="unit",nullable = false)
     private String unit;
@@ -27,7 +27,7 @@ public class Chapter {
     private String image;
     @Column(name="VideoLink",nullable = true)
     private String VideoLink;
-    @Column(name="TotalVisit")
+    @Column(name="TotalVisit",nullable = true)
     private double TotalVisit;
     @Column(name="enable",nullable = false)
     private boolean enable;

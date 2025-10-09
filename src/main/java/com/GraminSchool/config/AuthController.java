@@ -1,7 +1,7 @@
 package com.GraminSchool.config;
 
 import com.GraminSchool.entity.User;
-import com.GraminSchool.models.JwtRequest;
+import com.GraminSchool.dto.JwtRequest;
 import com.GraminSchool.models.JwtResponse;
 import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.security.JwtHelper;

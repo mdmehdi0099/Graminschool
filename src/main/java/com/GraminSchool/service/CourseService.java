@@ -1,7 +1,7 @@
 package com.GraminSchool.service;
 
 import com.GraminSchool.entity.Courses;
-import com.GraminSchool.models.CourseResponse;
+import com.GraminSchool.dto.CourseRequest;
 import com.GraminSchool.repo.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ public class CourseService {
     @Autowired
     private CourseRepository courseRepository;
 
-    public Courses createCourses(CourseResponse request){
+    public Courses createCourses(CourseRequest request){
         Courses courses=Courses.builder()
                 .course_name(request.getCourse_name())
                 .short_details(request.getShort_details())

@@ -1,14 +1,12 @@
 package com.GraminSchool.controllers;
 
-import com.GraminSchool.entity.Courses;
-import com.GraminSchool.entity.Role;
-import com.GraminSchool.entity.User;
-import com.GraminSchool.models.CourseResponse;
-import com.GraminSchool.models.SubjectResponse;
+import com.GraminSchool.dto.*;
+import com.GraminSchool.entity.*;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.repo.CourseRepository;
+import com.GraminSchool.service.ChapterService;
 import com.GraminSchool.service.CourseService;
 import com.GraminSchool.service.SubjectService;
 import com.GraminSchool.service.UserService;
@@ -35,6 +33,9 @@ public class AdminController {
 
     @Autowired
     private SubjectService subjectService;
+
+    @Autowired
+    private ChapterService chapterService;
 
     @Autowired
     private CourseRepository courseRepository;
@@ -193,14 +194,8 @@ public class AdminController {
         return ResponseEntity.ok(course);
     }
 
-//    @PostMapping("/create-course")
-//    public ResponseEntity<Courses> createCourses(@RequestBody CourseResponse courses){
-//        Courses createCourse=courseService.createCourses(courses);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(createCourse);
-//    }
-
-    @PostMapping("/create-course")
-    public ResponseEntity<?> createCourse(@RequestBody CourseResponse request) {
+    @PostMapping("/Create-Course")
+    public ResponseEntity<?> createCourse(@RequestBody CourseRequest request) {
         try {
             // Basic field validation (optional)
             if (request.getCourse_name() == null || request.getCourse_name().trim().isEmpty()) {
@@ -229,29 +224,68 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/create-Subject")
-    public ResponseEntity<?> createSubject(@RequestBody SubjectResponse Subjectrequest) {
+    @PostMapping("/Create-Subject")
+    public ResponseEntity<?> createSubject(@RequestBody SubjectRequest subjectRequest) {
         try {
             // Basic field validation (optional)
-            if (Subjectrequest.getName() == null || Subjectrequest.getName().trim().isEmpty()) {
+            if (subjectRequest.getName() == null || subjectRequest.getName().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("subject name is required.");
             }
-            if (Subjectrequest.getDescription() == null || Subjectrequest.getDescription().trim().isEmpty()) {
+            if (subjectRequest.getDescription() == null || subjectRequest.getDescription().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Description is required.");
             }
 
+
             // Save course
             // ✅ Save subject through service
-            ResponseEntity<?> subject = subjectService.saveSubject(Subjectrequest);
-            //Subject subject = subjectService.saveSubject(Subjectrequest);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(subject);
+            Subject subject = subjectService.saveSubject(subjectRequest);
+            //Subject subject =  subjectService.saveSubject(Subjectrequest);
+            SubjectResponseDTO subjectResponseDTO=SubjectResponseDTO.fromEntity(subject);
+            return ResponseEntity.status(HttpStatus.CREATED).body(subjectResponseDTO);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid input: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error occurred while creating course: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/Create-Chapter")
+    public ResponseEntity<?> createChapter(@RequestBody ChapterRequest request){
+        try{
+            if(request.getName()==null||request.getName().trim().isEmpty()){
+                return ResponseEntity.badRequest().body("Chapter name is required.");
+            }
+            if(request.getUnit()==null||request.getUnit().trim().isEmpty()){
+                return ResponseEntity.badRequest().body("Chapter unit is required.");
+            }
+            Chapter savedChapter=chapterService.saveChapter(request);
+
+            ChapterResponseDTO.ChapterResponseDTOBuilder responseDTO=ChapterResponseDTO.builder()
+                    .id(savedChapter.getId())
+                    .name(savedChapter.getName())
+                    .unit(savedChapter.getUnit())
+                    .image(savedChapter.getImage())
+                    .enable(savedChapter.isEnable())
+                    .subject(ChapterResponseDTO.SubjectSummary.builder()
+                        .id(savedChapter.getSubject().getId())
+                        .name(savedChapter.getSubject().getName())
+                        .description(savedChapter.getSubject().getDescription())
+                        .course(ChapterResponseDTO.CourseSummary.builder()
+                                .id(savedChapter.getSubject().getCourse().getId())
+                                .course_name(savedChapter.getSubject().getCourse().getCourse_name())
+                        .build())
+                    .build());
+
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(ChapterResponseDTO.fromEntity(savedChapter));
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid Input : "+e.getMessage());
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error while creating chapter: "+e.getMessage());
         }
     }
 

@@ -1,4 +1,4 @@
-package com.GraminSchool.models;
+package com.GraminSchool.dto;
 
 
 import lombok.*;

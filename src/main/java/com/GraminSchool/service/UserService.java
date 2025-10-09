@@ -3,7 +3,7 @@ package com.GraminSchool.service;
 
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
-import com.GraminSchool.models.JwtRequest;
+import com.GraminSchool.dto.JwtRequest;
 import com.GraminSchool.models.JwtResponse;
 import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
