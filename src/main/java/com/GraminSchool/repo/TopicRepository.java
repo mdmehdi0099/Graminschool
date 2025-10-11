@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface TopicRepository extends JpaRepository<Topic,Long> {
     Optional<Topic> findByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCase(String name);
 }

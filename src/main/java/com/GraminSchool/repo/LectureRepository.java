@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface LectureRepository extends JpaRepository<Lecture,Long> {
     Optional<Lecture> findByNameIgnoreCase(String name);
+    boolean existsByNameIgnoreCase(String name);
 }

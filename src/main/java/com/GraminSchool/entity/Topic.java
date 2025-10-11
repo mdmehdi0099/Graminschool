@@ -19,18 +19,18 @@ public class Topic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="name",nullable = false,unique = true)
+    @Column(name="Name",nullable = false,unique = true)
     private String name;
     @Column(name="Image",nullable = true)
     private String image;
     @Column(name="VideoLink",nullable = true)
-    private String VideoLink;
+    private String videoLink;
     @Column(name="TotalVisit")
-    private double TotalVisit;
-    @Column(name="enable",nullable = false)
+    private double totalVisit;
+    @Column(name="Enable",nullable = false)
     private boolean enable;
     @Column(name="Other",nullable = true)
-    private String Other;
+    private String other;
     @CreatedDate
     private LocalDateTime createdAt;
     @UpdateTimestamp

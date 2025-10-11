@@ -5,7 +5,7 @@ import com.GraminSchool.entity.*;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
-import com.GraminSchool.repo.CourseRepository;
+import com.GraminSchool.repo.*;
 import com.GraminSchool.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,7 +42,22 @@ public class AdminController {
     private LectureService lectureService;
 
     @Autowired
+    private CourseHierarchyService courseHierarchyService;
+
+    @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private SubjectRepository subjectRepository;
+
+    @Autowired
+    private ChapterRepository chapterRepository;
+
+    @Autowired
+    private TopicRepository topicRepository;
+
+    @Autowired
+    private LectureRepository lectureRepository;
 
     //Getting the list of users
     @GetMapping("/user")
@@ -187,7 +203,7 @@ public class AdminController {
         }
     }
 
-
+    /*
     @GetMapping("/course/{courseId}")
     public ResponseEntity<Courses> getCourseDetails(@PathVariable Long courseId) {
         Courses course = courseRepository.findCourseWithFullHierarchy(courseId);
@@ -197,6 +213,9 @@ public class AdminController {
         return ResponseEntity.ok(course);
     }
 
+ */
+
+    //create course
     @PostMapping("/Create-Course")
     public ResponseEntity<?> createCourse(@RequestBody CourseRequest request) {
         try {
@@ -227,6 +246,14 @@ public class AdminController {
         }
     }
 
+    //Get the list of courses
+    @GetMapping("/Course/List")
+    public ResponseEntity<?> getAllCourses() {
+        List<CourseResponseDTO> courses = courseService.getAllCourses();
+        return ResponseEntity.ok(courses);
+    }
+
+    //create subject
     @PostMapping("/Create-Subject")
     public ResponseEntity<?> createSubject(@RequestBody SubjectRequest subjectRequest) {
         try {
@@ -254,6 +281,7 @@ public class AdminController {
         }
     }
 
+    //create chapter
     @PostMapping("/Create-Chapter")
     public ResponseEntity<?> createChapter(@RequestBody ChapterRequest request){
         try{
@@ -277,7 +305,7 @@ public class AdminController {
                         .description(savedChapter.getSubject().getDescription())
                         .course(ChapterResponseDTO.CourseSummary.builder()
                                 .id(savedChapter.getSubject().getCourse().getId())
-                                .course_name(savedChapter.getSubject().getCourse().getCourse_name())
+                                .course_name(savedChapter.getSubject().getCourse().getCourseName())
                         .build())
                     .build());
 
@@ -292,6 +320,7 @@ public class AdminController {
         }
     }
 
+    //create topic
     @PostMapping("/Create-Topic")
     public ResponseEntity<?> createTopic(@RequestBody TopicRequest request) {
         try {
@@ -315,6 +344,7 @@ public class AdminController {
         }
     }
 
+    //create lecture
     @PostMapping("/Create-Lecture")
     public ResponseEntity<?> createLecture(@RequestBody LectureRequest request) {
         try {
@@ -336,10 +366,248 @@ public class AdminController {
         }
     }
 
+    //get course hierarchy details by course id
+    @GetMapping("/Course/{courseId}/details")
+    public ResponseEntity<?> getCourseHierarchyDetail(@PathVariable Long courseId) {
+        try {
+            CourseHierarchyResponseDTO courseHierarchyResponseDTO = courseHierarchyService.getCourseHierarchy(courseId);
+            return ResponseEntity.ok(courseHierarchyResponseDTO);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error fetching hierarchy: " + e.getMessage());
+        }
+    }
+
+    //update course detail
+    @PutMapping("/Course/Update/{id}")
+    public ResponseEntity<?> updateCourse(@PathVariable Long id,@RequestBody Courses updatedCourses){
+        Optional<Courses> existingCourseOpt=courseRepository.findById(id);
+        if (existingCourseOpt.isEmpty()){
+            return ResponseEntity.badRequest().body("Course not found with ID: "+id);
+        }
+        Courses existingCourse=existingCourseOpt.get();
+        //checking the uniqueness of the course name
+        if (updatedCourses.getCourseName()!=null && !updatedCourses.getCourseName().equalsIgnoreCase(existingCourse.getCourseName())){
+            boolean nameExists=courseRepository.existsByCourseNameIgnoreCase(updatedCourses.getCourseName());
+            if (nameExists){
+                return ResponseEntity.badRequest().body("Course name already exists!");
+            }
+            existingCourse.setCourseName(updatedCourses.getCourseName());
+        }
+        //update all other non null fields
+        if (updatedCourses.getShortDetails()!=null){
+            existingCourse.setShortDetails(updatedCourses.getShortDetails());
+        }
+        if (updatedCourses.getCourseDescription()!=null){
+            existingCourse.setCourseDescription(updatedCourses.getCourseDescription());
+        }
+        if (updatedCourses.getPrice()!=0){
+            existingCourse.setPrice(updatedCourses.getPrice());
+        }
+        if (updatedCourses.getInstructorName()!=null){
+            existingCourse.setInstructorName(updatedCourses.getInstructorName());
+        }
+        if (updatedCourses.getCourseImage()!=null){
+            existingCourse.setCourseImage(updatedCourses.getCourseImage());
+        }
+        if (updatedCourses.getValidity()!=0){
+            existingCourse.setValidity(updatedCourses.getValidity());
+        }
+        existingCourse.setEnable(updatedCourses.isEnable());
+        if (updatedCourses.getOther()!=null){
+            existingCourse.setOther(updatedCourses.getOther());
+        }
+        //save the updated entity
+        Courses courses=courseRepository.save(existingCourse);
+        return ResponseEntity.ok(courses);
+    }
+
+    @PutMapping("/Subject/Update/{id}")
+    public ResponseEntity<?> updateSubject(@PathVariable Long id,@RequestBody Subject updatedSubject){
+        Optional<Subject> existingSubjectOpt= subjectRepository.findById(id);
+
+        if(existingSubjectOpt.isEmpty()){
+            return ResponseEntity.badRequest().body("Subject not found with ID: "+id);
+        }
+        Subject existingSubject=existingSubjectOpt.get();
+        //checking the uniqueness of the subject name
+        if (updatedSubject.getName()!=null && !updatedSubject.getName().equalsIgnoreCase(existingSubject.getName())){
+            boolean nameExists=subjectRepository.existsByNameIgnoreCase(updatedSubject.getName());
+            if (nameExists){
+                return ResponseEntity.badRequest().body("Subject name already exists!");
+            }
+            existingSubject.setName(updatedSubject.getName());
+        }
+        //update other fields
+        if (updatedSubject.getDescription()!=null){
+            existingSubject.setDescription(updatedSubject.getDescription());
+        }
+        if (updatedSubject.getInstructorName()!=null){
+            existingSubject.setInstructorName(updatedSubject.getInstructorName());
+        }
+        if (updatedSubject.getImage()!=null){
+            existingSubject.setImage(updatedSubject.getImage());
+        }
+
+        existingSubject.setEnable(updatedSubject.isEnable());
+
+        if (updatedSubject.getOther()!=null){
+            existingSubject.setOther(updatedSubject.getOther());
+        }
+
+        //save the updated entity
+        Subject subject=subjectRepository.save(existingSubject);
 
 
+        //convert the reponse to DTO
+        UpdateSubjectResponse updateSubjectResponse=new UpdateSubjectResponse(
+                subject.getId(),
+                subject.getName(),
+                subject.getDescription(),
+                subject.getInstructorName(),
+                subject.getImage(),
+                subject.isEnable(),
+                subject.getOther()
+        );
+
+        return ResponseEntity.ok(updateSubjectResponse);
+
+    }
+
+    //update chapter
+    @PutMapping("/Chapter/Update/{id}")
+    public ResponseEntity<?> updateChapter(@PathVariable Long id,@RequestBody Chapter updatedChapter){
+        Optional<Chapter> existingChapterOpt= chapterRepository.findById(id);
+        if(existingChapterOpt.isEmpty()){
+            return ResponseEntity.badRequest().body("Chapter not found with ID: "+id);
+        }
+        Chapter existingChapter=existingChapterOpt.get();
+        //checking the uniqueness of the subject name
+        if (updatedChapter.getName()!=null && !updatedChapter.getName().equalsIgnoreCase(existingChapter.getName())){
+            boolean nameExists=chapterRepository.existsByNameIgnoreCase(updatedChapter.getName());
+            if (nameExists){
+                return ResponseEntity.badRequest().body("Chapter name already exists!");
+            }
+            existingChapter.setName(updatedChapter.getName());
+        }
+        //update other fields
+        if (updatedChapter.getUnit()!=null){
+            existingChapter.setUnit(updatedChapter.getUnit());
+        }
+        if (updatedChapter.getImage()!=null){
+            existingChapter.setImage(updatedChapter.getImage());
+        }
+        if (updatedChapter.getVideoLink()!=null){
+            existingChapter.setVideoLink(updatedChapter.getVideoLink());
+        }
+        existingChapter.setEnable(updatedChapter.isEnable());
+        if (updatedChapter.getOther()!=null){
+            existingChapter.setOther(updatedChapter.getOther());
+        }
+        //save the updated entity
+        Chapter chapter=chapterRepository.save(existingChapter);
+
+        //convert the reponse to DTO
+        UpdateChapterResponse updateChapterResponse=new UpdateChapterResponse(
+                chapter.getId(),
+                chapter.getName(),
+                chapter.getUnit(),
+                chapter.getImage(),
+                chapter.getVideoLink(),
+                chapter.isEnable(),
+                chapter.getOther()
+        );
+        return ResponseEntity.ok(updateChapterResponse);
+    }
+
+    //update Topic
+    @PutMapping("/Topic/Update/{id}")
+    public ResponseEntity<?> updateTopic(@PathVariable Long id,@RequestBody Topic updatedTopic){
+        Optional<Topic> existingTopicOpt=topicRepository.findById(id);
+        if(existingTopicOpt.isEmpty()){
+            return ResponseEntity.badRequest().body("Topic with ID: "+id);
+        }
+        Topic existingTopic=existingTopicOpt.get();
+        //checking the uniqueness of the topic name
+        if (updatedTopic.getName()!=null && !updatedTopic.getName().equalsIgnoreCase(existingTopic.getName())){
+            boolean nameExists=topicRepository.existsByNameIgnoreCase(updatedTopic.getName());
+            if (nameExists){
+                return ResponseEntity.badRequest().body("Topic name already exists!");
+            }
+            existingTopic.setName(updatedTopic.getName());
+        }
+        //update other fields
+        if (updatedTopic.getImage()!=null){
+            existingTopic.setImage(updatedTopic.getImage());
+        }
+        if (updatedTopic.getVideoLink()!=null){
+            existingTopic.setVideoLink(updatedTopic.getVideoLink());
+        }
+        existingTopic.setEnable(updatedTopic.isEnable());
+        if (updatedTopic.getOther()!=null){
+            existingTopic.setOther(updatedTopic.getOther());
+        }
+        //save the updated entity
+        Topic topic=topicRepository.save(existingTopic);
+
+        //convert the reponse to DTO
+        UpdateTopicResponse updateTopicResponse=new UpdateTopicResponse(
+                topic.getId(),
+                topic.getName(),
+                topic.getImage(),
+                topic.getVideoLink(),
+                topic.isEnable(),
+                topic.getOther()
+        );
+        return ResponseEntity.ok(updateTopicResponse);
+    }
+
+    //Lecture
+    @PutMapping("/Lecture/Update/{id}")
+    public ResponseEntity<?> updateLecture(@PathVariable Long id,@RequestBody Lecture updatedLecture){
+        Optional<Lecture> existingLectureOpt=lectureRepository.findById(id);
+        if(existingLectureOpt.isEmpty()){
+            return ResponseEntity.badRequest().body("Lecture with ID: "+id);
+        }
+        Lecture existingLecture=existingLectureOpt.get();
+        //checking the uniqueness of the lecture name
+        if (updatedLecture.getName()!=null && !updatedLecture.getName().equalsIgnoreCase(existingLecture.getName())){
+            boolean nameExists=topicRepository.existsByNameIgnoreCase(updatedLecture.getName());
+            if (nameExists){
+                return ResponseEntity.badRequest().body("Lecture name already exists!");
+            }
+            existingLecture.setName(updatedLecture.getName());
+        }
+        //update other fields
+        if (updatedLecture.getImage()!=null){
+            existingLecture.setImage(updatedLecture.getImage());
+        }
+        if (updatedLecture.getVideoLink()!=null){
+            existingLecture.setVideoLink(updatedLecture.getVideoLink());
+        }
+        existingLecture.setEnable(updatedLecture.isEnable());
+        if (updatedLecture.getOther()!=null){
+            existingLecture.setOther(updatedLecture.getOther());
+        }
+        //save the updated entity
+        Lecture lecture=lectureRepository.save(existingLecture);
+
+        //convert the reponse to DTO
+        UpdateLectureResponse updateLectureResponse=new UpdateLectureResponse(
+                lecture.getId(),
+                lecture.getName(),
+                lecture.getImage(),
+                lecture.getVideoLink(),
+                lecture.isEnable(),
+                lecture.getMaxWatch(),
+                lecture.getOther()
+        );
+        return ResponseEntity.ok(updateLectureResponse);
+    }
 
 
 
 
 }
+

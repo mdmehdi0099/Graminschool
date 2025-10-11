@@ -31,10 +31,10 @@ public class ChapterService {
                 .name(request.getName())
                 .unit(request.getUnit())
                 .image(request.getImage())
-                .VideoLink(request.getVideoLink())
-                .TotalVisit(0)
+                .videoLink(request.getVideoLink())
+                .totalVisit(0)
                 .enable(request.isEnable())
-                .Other(request.getOther())
+                .other(request.getOther())
                 .subject(subject)
                 .build();
         try{

@@ -48,6 +48,6 @@ public class TopicResponseDTO {
     @Builder
     public static class CourseSummary {
         private Long id;
-        private String course_name;
+        private String courseName;
     }
 }

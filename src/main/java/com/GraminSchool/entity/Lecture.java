@@ -17,20 +17,20 @@ public class Lecture {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="name",nullable = false,unique = true)
+    @Column(name="Name",nullable = false,unique = true)
     private String name;
-    @Column(name="image",nullable = true)
+    @Column(name="Image",nullable = true)
     private String image;
     @Column(name="VideoLink",nullable = false)
-    private String VideoLink;
+    private String videoLink;
     @Column(name="TotalVisit")
-    private double TotalVisit;
+    private double totalVisit;
     @Column(name="enable",nullable = false)
     private boolean enable;
     @Column(name="MaxWatch",nullable = true)
-    private int MaxWatch;
+    private int maxWatch;
     @Column(name="Other",nullable = true)
-    private String Other;
+    private String other;
     @CreatedDate
     private LocalDateTime createdAt;
     @UpdateTimestamp

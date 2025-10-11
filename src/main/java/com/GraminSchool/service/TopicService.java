@@ -33,10 +33,10 @@ public class TopicService {
         Topic topic = Topic.builder()
                 .name(request.getName())
                 .image(request.getImage())
-                .VideoLink(request.getVideoLink())
-                .TotalVisit(0)
+                .videoLink(request.getVideoLink())
+                .totalVisit(0)
                 .enable(request.isEnable())
-                .Other(request.getOther())
+                .other(request.getOther())
                 .chapter(chapter)
                 .build();
         Topic savedTopic;
@@ -66,7 +66,7 @@ public class TopicService {
                                                 .course(
                                                         TopicResponseDTO.CourseSummary.builder()
                                                                 .id(chapter.getSubject().getCourse().getId())
-                                                                .course_name(chapter.getSubject().getCourse().getCourse_name())
+                                                                .courseName(chapter.getSubject().getCourse().getCourseName())
                                                                 .build()
                                                 )
                                                 .build()

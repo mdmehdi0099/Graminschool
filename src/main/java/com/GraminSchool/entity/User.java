@@ -18,22 +18,22 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "Name",nullable = false)
     private String name;
 
-    @Column(unique = true,nullable = false)
+    @Column(name="Email",unique = true,nullable = false)
     private String email;
 
-    @Column(unique = true,nullable = false)
+    @Column(name="Phone",unique = true,nullable = false)
     private String phone;
 
-    @Column(nullable = false)
+    @Column(name="Password",nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column(name="address",nullable = false)
+    @Column(name="Address",nullable = false)
     private String address;
 
 

@@ -21,27 +21,27 @@ public class Courses {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name="course_name",nullable = false,unique = true)
-    private String course_name;
+    private String courseName;
     @Column(name="short_details",nullable = false)
-    private String short_details;
+    private String shortDetails;
     @Column(name="course_description",nullable = false)
-    private String course_description;
+    private String courseDescription;
     @Column(name="price",nullable = false)
     private double price;
     @Column(name="InstructorName",nullable = true)
-    private String InstructorName;
+    private String instructorName;
     @Column(name="Course_Image",nullable = true)
-    private String Course_Image;
+    private String courseImage;
     @Column(name="validity",nullable = true)
     private int validity;
     @Column(name="TotalVisit")
-    private double TotalVisit;
+    private double totalVisit;
     @Column(name="TotalEnrolled")
-    private int TotalEnrolled;
+    private int totalEnrolled;
     @Column(name="enable",nullable = false)
     private boolean enable;
     @Column(name="Other",nullable = true)
-    private String Other;
+    private String other;
     @CreatedDate
     private LocalDateTime createdAt;
     @UpdateTimestamp

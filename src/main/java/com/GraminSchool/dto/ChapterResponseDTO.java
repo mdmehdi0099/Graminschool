@@ -54,7 +54,7 @@ public class ChapterResponseDTO {
                         .description(chapter.getSubject().getDescription())
                         .course(chapter.getSubject().getCourse() != null ? CourseSummary.builder()
                                 .id(chapter.getSubject().getCourse().getId())
-                                .course_name(chapter.getSubject().getCourse().getCourse_name())
+                                .course_name(chapter.getSubject().getCourse().getCourseName())
                                 .build() : null)
                         .build() : null)
                 .build();

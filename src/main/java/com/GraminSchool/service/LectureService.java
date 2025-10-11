@@ -33,11 +33,11 @@ public class LectureService {
         Lecture lecture = Lecture.builder()
                 .name(request.getName())
                 .image(request.getImage())
-                .VideoLink(request.getVideoLink())
+                .videoLink(request.getVideoLink())
                 .enable(request.isEnable())
-                .MaxWatch(request.getMaxWatch())
-                .Other(request.getOther())
-                .TotalVisit(0)
+                .maxWatch(request.getMaxWatch())
+                .other(request.getOther())
+                .totalVisit(0)
                 .topic(topic)
                 .build();
 
@@ -74,7 +74,7 @@ public class LectureService {
                                                                 .course(
                                                                         LectureResponseDTO.CourseSummary.builder()
                                                                                 .id(topic.getChapter().getSubject().getCourse().getId())
-                                                                                .course_name(topic.getChapter().getSubject().getCourse().getCourse_name())
+                                                                                .course_name(topic.getChapter().getSubject().getCourse().getCourseName())
                                                                                 .build()
                                                                 )
                                                                 .build()

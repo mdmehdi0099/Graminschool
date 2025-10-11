@@ -39,8 +39,8 @@ public class SubjectResponseDTO {
                 .updatedAt(subject.getUpdatedAt() != null ? subject.getUpdatedAt().toString() : null)
                 .course(subject.getCourse() != null ? CourseSummary.builder()
                         .id(subject.getCourse().getId())
-                        .course_name(subject.getCourse().getCourse_name())
-                        .course_description(subject.getCourse().getCourse_description())
+                        .course_name(subject.getCourse().getCourseName())
+                        .course_description(subject.getCourse().getCourseDescription())
                         .build() : null)
                 .build();
     }
