@@ -108,7 +108,7 @@ public class AdminController {
             @SuppressWarnings("unchecked")
             List<FailedUserRow> failedUsers = (List<FailedUserRow>) result.get("failedRows");
 
-            // ✅ If no failures, return 200 OK
+            //If no failures, return 200 OK
             if (failedUsers == null || failedUsers.isEmpty()) {
                 List<BulkUserRegistrationResponse> responseList = savedUsers.stream()
                         .map(user -> new BulkUserRegistrationResponse(
@@ -125,7 +125,7 @@ public class AdminController {
                 return ResponseEntity.ok(responseList);
             }
 
-            // ❌ If any failures, return 400 with failed records
+            //If any failures, return 400 with failed records
             List<BulkUserRegistrationResponse> failedResponseList = failedUsers.stream()
                     .map(row -> new BulkUserRegistrationResponse(
                             row.getName(),
@@ -162,7 +162,7 @@ public class AdminController {
             @SuppressWarnings("unchecked")
             List<FailedUserRow> failedUsers = (List<FailedUserRow>) result.get("failedRows");
 
-            // ✅ If no failures, return 200 OK
+            // If no failures, return 200 OK
             if (failedUsers == null || failedUsers.isEmpty()) {
                 List<BulkUserRegistrationResponse> responseList = savedUsers.stream()
                         .map(user -> new BulkUserRegistrationResponse(
@@ -179,7 +179,7 @@ public class AdminController {
                 return ResponseEntity.ok(responseList);
             }
 
-            // ❌ If any failures, return 400 with failed records
+            //If any failures, return 400 with failed records
             List<BulkUserRegistrationResponse> failedResponseList = failedUsers.stream()
                     .map(row -> new BulkUserRegistrationResponse(
                             row.getName(),
@@ -267,7 +267,7 @@ public class AdminController {
 
 
             // Save course
-            // ✅ Save subject through service
+            //Save subject through service
             Subject subject = subjectService.saveSubject(subjectRequest);
             //Subject subject =  subjectService.saveSubject(Subjectrequest);
             SubjectResponseDTO subjectResponseDTO=SubjectResponseDTO.fromEntity(subject);
@@ -324,7 +324,7 @@ public class AdminController {
     @PostMapping("/Create-Topic")
     public ResponseEntity<?> createTopic(@RequestBody TopicRequest request) {
         try {
-            // ✅ Basic validation
+            //Basic validation
             if (request.getName() == null || request.getName().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Topic name is required.");
             }
