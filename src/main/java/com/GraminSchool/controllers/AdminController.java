@@ -423,7 +423,21 @@ public class AdminController {
         }
         //save the updated entity
         Courses courses=courseRepository.save(existingCourse);
-        return ResponseEntity.ok(courses);
+        CourseResponseDTO courseResponseDTO=new CourseResponseDTO(
+                courses.getId(),
+                courses.getCourseName(),
+                courses.getShortDetails(),
+                courses.getCourseDescription(),
+                courses.getPrice(),
+                courses.getInstructorName(),
+                courses.getCourseImage(),
+                courses.getValidity(),
+                courses.getTotalVisit(),
+                courses.getTotalEnrolled(),
+                courses.isEnable(),
+                courses.getOther()
+        );
+        return ResponseEntity.ok(courseResponseDTO);
     }
 
     @PutMapping("/Subject/Update/{id}")
@@ -486,7 +500,7 @@ public class AdminController {
             return ResponseEntity.badRequest().body("Chapter not found with ID: "+id);
         }
         Chapter existingChapter=existingChapterOpt.get();
-        //checking the uniqueness of the subject name
+        //checking the uniqueness of the chapter name
         if (updatedChapter.getName()!=null && !updatedChapter.getName().equalsIgnoreCase(existingChapter.getName())){
             boolean nameExists=chapterRepository.existsByNameIgnoreCase(updatedChapter.getName());
             if (nameExists){
@@ -590,6 +604,10 @@ public class AdminController {
             existingLecture.setVideoLink(updatedLecture.getVideoLink());
         }
         existingLecture.setEnable(updatedLecture.isEnable());
+        if (updatedLecture.getMaxWatch()!=0){
+            existingLecture.setMaxWatch(updatedLecture.getMaxWatch());
+        }
+
         if (updatedLecture.getOther()!=null){
             existingLecture.setOther(updatedLecture.getOther());
         }
@@ -642,6 +660,7 @@ public class AdminController {
                                @RequestParam boolean enabled){
         return noticeService.toggleNoticeStatus(id,enabled);
     }
+
 
 
 }
