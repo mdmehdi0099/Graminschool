@@ -59,6 +59,9 @@ public class AdminController {
     @Autowired
     private LectureRepository lectureRepository;
 
+    @Autowired
+    private NoticeService noticeService;
+
     //Getting the list of users
     @GetMapping("/user")
     public ResponseEntity<List<User>> user(){
@@ -604,6 +607,40 @@ public class AdminController {
                 lecture.getOther()
         );
         return ResponseEntity.ok(updateLectureResponse);
+    }
+
+    // Create notice
+    @PostMapping("/create-notice")
+    public Notice createNotice(@RequestBody NoticeDTO noticeDTO) {
+        return noticeService.createNotice(noticeDTO.getTitle(), noticeDTO.getMessage(), noticeDTO.getCreatedBy());
+    }
+
+    // update notice
+    @PutMapping("/notice/{id}")
+    public Notice updateNotice(@PathVariable Long id, @RequestBody NoticeDTO noticeDTO) {
+        return noticeService.updateNotice(id, noticeDTO.getTitle(), noticeDTO.getMessage());
+    }
+
+    // list all notices
+    @GetMapping("/notices")
+    public List<Notice> getAllNotices(){
+        return noticeService.getAllNotices();
+    }
+    // list all active notices
+    @GetMapping("/active-notices")
+    public List<Notice> getActiveNotices(){
+        return noticeService.getActiveNotices();
+    }
+    // get notice by id
+    @GetMapping("/notice/{id}")
+    public Notice getNotice(@PathVariable long id){
+        return noticeService.getNoticeById(id);
+    }
+    //enable/disable
+    @PatchMapping("/notice/{id}/status")
+    public Notice toggleNotice(@PathVariable long id,
+                               @RequestParam boolean enabled){
+        return noticeService.toggleNoticeStatus(id,enabled);
     }
 
 

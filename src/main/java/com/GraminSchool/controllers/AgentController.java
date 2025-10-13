@@ -1,11 +1,13 @@
 package com.GraminSchool.controllers;
 
 import com.GraminSchool.dto.CourseResponseDTO;
+import com.GraminSchool.entity.Notice;
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.service.CourseService;
+import com.GraminSchool.service.NoticeService;
 import com.GraminSchool.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,8 @@ public class AgentController {
 
     @Autowired
     private CourseService courseService;
+    @Autowired
+    private NoticeService noticeService;
 
     @GetMapping("/user")
     public ResponseEntity<List<User>> user(){
@@ -98,6 +102,14 @@ public class AgentController {
     public ResponseEntity<?> getAllCourses() {
         List<CourseResponseDTO> courses = courseService.getAllCourses();
         return ResponseEntity.ok(courses);
+    }
+    @GetMapping("/active-notices")
+    public List<Notice> getActiveNotices(){
+        return noticeService.getActiveNotices();
+    }
+    @GetMapping("/notice/{id}")
+    public Notice getNotice(@PathVariable long id){
+        return noticeService.getNoticeById(id);
     }
 
 
