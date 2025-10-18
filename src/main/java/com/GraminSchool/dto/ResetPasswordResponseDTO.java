@@ -10,6 +10,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ResetPasswordResponseDTO {
-    private Email email;
-    private String Message;
+    private String email;
+    private String message;
 }

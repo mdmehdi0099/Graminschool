@@ -1,6 +1,8 @@
 package com.GraminSchool.service;
 
 
+import com.GraminSchool.dto.ResetPasswordRequestDTO;
+import com.GraminSchool.dto.ResetPasswordResponseDTO;
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.dto.JwtRequest;
@@ -39,15 +41,6 @@ public class UserService {
 
     @Autowired
     private EmailService emailService;
-
-    //private List<User> user=new ArrayList<>();
-//    public UserService(){
-//        user.add(new User(UUID.randomUUID().toString(),"Mehdi Hassan 1","1mdmehdi0099@gmail.com"));
-//        user.add(new User(UUID.randomUUID().toString(),"Mehdi Hassan 2","2mdmehdi0099@gmail.com"));
-//        user.add(new User(UUID.randomUUID().toString(),"Mehdi Hassan 3","3mdmehdi0099@gmail.com"));
-//        user.add(new User(UUID.randomUUID().toString(),"Mehdi Hassan 4","4mdmehdi0099@gmail.com"));
-//        passwordEncoder = null;
-//    }
 
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,JwtHelper jwtHelper) {
@@ -402,9 +395,6 @@ public class UserService {
         return result;
     }
 
-
-
-
     public JwtResponse loginUser(JwtRequest request) {
         // 1. Find user by email (username)
         User user = userRepository.findByEmail(request.getEmail())
@@ -434,9 +424,6 @@ public class UserService {
         return new JwtResponse(token, user.getName());
     }
 
-
-
-
     public List<User> getUsers(){
         return userRepository.findAll();
     }
@@ -448,7 +435,39 @@ public class UserService {
         return userRepository.findAll().stream().filter(user -> user.getRole()==Role.USER).toList();
     }
 
+    public ResetPasswordResponseDTO resetPassword(ResetPasswordRequestDTO request) {
+        // 1️⃣ Find user by email
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
 
+        // 2️⃣ Validate OTP
+        if (user.getOtp() == null || !user.getOtp().equals(request.getOtp())) {
+            throw new RuntimeException("Invalid OTP!");
+        }
 
+        // 3️⃣ Validate password confirmation
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Passwords do not match!");
+        }
+
+        // 4️⃣ Encrypt and set new password
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // 5️⃣ Expire OTP
+        user.setOtp(null);
+
+        // 6️⃣ (Optional) Invalidate old tokens
+        // If you store tokens in DB, mark them expired here
+        //jwtHelper.invalidateTokenForUser(user.getEmail());
+
+        // 7️⃣ Save user
+        userRepository.save(user);
+
+        // 8️⃣ Return response
+        return ResetPasswordResponseDTO.builder()
+                .email(user.getEmail())
+                .message("Password reset successful. Please log in again.")
+                .build();
+    }
 
 }

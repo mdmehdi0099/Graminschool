@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ResetPasswordRequestDTO {
-    private Email email;
+    private String email;
     private Integer otp;
     private String password;
     private String confirmPassword;

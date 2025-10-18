@@ -45,26 +45,11 @@ public class AuthController {
         this.userService = userService;
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<JwtResponse> login1(@RequestBody JwtRequest request){
-//        this.doAuthenticate(request.getEmail(),request.getPassword());
-//        UserDetails userDetails=userDetailsService.loadUserByUsername(request.getEmail());
-//        String token=this.jwtHelper.generateToken(userDetails);
-//
-//        JwtResponse response=JwtResponse.builder()
-//                .jwtToken(token)
-//                .username(userDetails.getUsername()).build();
-//
-//        return new ResponseEntity<>(response, HttpStatus.OK);
-//
-//    }
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest request) {
         JwtResponse response = userService.loginUser(request);
         return ResponseEntity.ok(response);
     }
-
-
 
 
     @PostMapping("/register")
@@ -87,11 +72,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-//    @PostMapping("/reset-password")
-//    public ResponseEntity<ResetPasswordResponseDTO> ResetPassword(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
-//        ForgetPasswordResponseDTO response = emailService.sendForgetPasswordEmail(email);
-//        return ResponseEntity.status(HttpStatus.OK).body(response);
-//    }
+    @PostMapping("/reset-password")
+    public ResponseEntity<ResetPasswordResponseDTO> resetPassword(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+        ResetPasswordResponseDTO response = userService.resetPassword(resetPasswordRequestDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
 
 
