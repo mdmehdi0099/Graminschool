@@ -1,10 +1,11 @@
 package com.GraminSchool.config;
 
+import com.GraminSchool.dto.*;
 import com.GraminSchool.entity.User;
-import com.GraminSchool.dto.JwtRequest;
 import com.GraminSchool.models.JwtResponse;
 import com.GraminSchool.models.RegisterResponse;
 import com.GraminSchool.security.JwtHelper;
+import com.GraminSchool.service.EmailService;
 import com.GraminSchool.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,11 @@ public class AuthController {
     private JwtHelper jwtHelper;
 
     private final UserService userService;
+
+    @Autowired
+    private EmailService emailService;
+
+
 
     private Logger logger=LoggerFactory.getLogger(AuthController.class);
 
@@ -64,6 +70,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@RequestBody User request) {
         RegisterResponse response = userService.registerUser(request);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     //registerAdminUser
@@ -72,6 +79,19 @@ public class AuthController {
         RegisterResponse response = userService.registerAdminUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping("/forget-password")
+    public ResponseEntity<ForgetPasswordResponseDTO> forgetPassword(@RequestBody ForgetPasswordRequestDTO forgetPasswordRequestDTO) {
+        String email = forgetPasswordRequestDTO.getEmail();
+        ForgetPasswordResponseDTO response = emailService.sendForgetPasswordEmail(email);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+//    @PostMapping("/reset-password")
+//    public ResponseEntity<ResetPasswordResponseDTO> ResetPassword(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+//        ForgetPasswordResponseDTO response = emailService.sendForgetPasswordEmail(email);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
 
 
 

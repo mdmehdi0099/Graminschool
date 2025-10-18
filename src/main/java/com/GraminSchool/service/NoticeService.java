@@ -3,6 +3,7 @@ package com.GraminSchool.service;
 import com.GraminSchool.entity.Notice;
 import com.GraminSchool.repo.NoticeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class NoticeService {
         notice.setEnabled(enabled);
         return noticeRepository.save(notice);
     }
+
     public List<Notice> getAllNotices(){
         return noticeRepository.findAll();
     }
@@ -47,6 +49,12 @@ public class NoticeService {
 
     public List<Notice> getNoticesByCreatedBy(String createdBy) {
         return noticeRepository.findByCreatedByIgnoreCase(createdBy);
+    }
+    // ✅ Runs every 10 seconds
+    //@Scheduled(fixedRate = 10000)
+    public void checkSchedular(){
+        System.out.println("Schedular is executed....");
+
     }
 
 

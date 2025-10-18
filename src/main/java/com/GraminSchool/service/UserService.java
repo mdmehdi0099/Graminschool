@@ -37,6 +37,9 @@ public class UserService {
     @Autowired
     private final JwtHelper jwtHelper;
 
+    @Autowired
+    private EmailService emailService;
+
     //private List<User> user=new ArrayList<>();
 //    public UserService(){
 //        user.add(new User(UUID.randomUUID().toString(),"Mehdi Hassan 1","1mdmehdi0099@gmail.com"));
@@ -111,6 +114,9 @@ public class UserService {
 
         User savedUser=userRepository.save(user);
 
+        // ✅ 2. Send registration email
+        emailService.sendRegistrationEmail(savedUser.getEmail(), savedUser.getName());
+
         //build UserDetails for token generation
         UserDetails userDetails=org.springframework.security.core.userdetails.User
                 .withUsername(savedUser.getEmail())
@@ -140,6 +146,9 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         User savedUser=userRepository.save(user);
 
+        // ✅ 2. Send registration email
+        emailService.sendRegistrationEmail(savedUser.getEmail(), savedUser.getName());
+
         return new UserRegistrationResponse(savedUser.getEmail(),savedUser.getRole().name());
     }
     @Transactional
@@ -159,6 +168,9 @@ public class UserService {
         user.setStatus(request.isStatus());
         user.setCreatedAt(LocalDateTime.now());
         User savedUser=userRepository.save(user);
+
+        // ✅ 2. Send registration email
+        emailService.sendRegistrationEmail(savedUser.getEmail(), savedUser.getName());
 
         return new UserRegistrationResponse(savedUser.getEmail(),savedUser.getRole().name());
     }

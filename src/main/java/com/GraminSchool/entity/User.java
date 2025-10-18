@@ -39,6 +39,9 @@ public class User {
 
     private boolean status;
 
+    @Column(name="OTP",nullable = true)
+    private Integer otp;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
