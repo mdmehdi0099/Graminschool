@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface NoticeRepository  extends JpaRepository<Notice,Long> {
     List<Notice> findByEnabled(Boolean enabled);
+    List<Notice> findByRoleIgnoreCase(String role);
+    List<Notice> findByCreatedByIgnoreCase(String createdBy);
 }

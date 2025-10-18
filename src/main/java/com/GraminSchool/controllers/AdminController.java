@@ -6,7 +6,9 @@ import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
 import com.GraminSchool.models.admin.UserRegistrationResponse;
 import com.GraminSchool.repo.*;
+import com.GraminSchool.security.JwtHelper;
 import com.GraminSchool.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +63,9 @@ public class AdminController {
 
     @Autowired
     private NoticeService noticeService;
+
+    @Autowired
+    private JwtHelper jwtHelper;
 
     //Getting the list of users
     @GetMapping("/user")
@@ -629,15 +634,41 @@ public class AdminController {
 
     // Create notice
     @PostMapping("/create-notice")
-    public Notice createNotice(@RequestBody NoticeDTO noticeDTO) {
-        return noticeService.createNotice(noticeDTO.getTitle(), noticeDTO.getMessage(), noticeDTO.getCreatedBy());
+    public Notice createNotice(@RequestBody NoticeDTO requestNotice, HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return noticeService.createNotice(requestNotice.getTitle(),requestNotice.getMessage(),username,"ADMIN");
+    }
+
+    // ✅ Get all notices by role
+    @GetMapping("/notice/role/{role}")
+    public List<Notice> getNoticesByRole(@PathVariable String role) {
+        return noticeService.getNoticesByRole(role);
+    }
+    //get the list of my notices only
+    @GetMapping("/notice/my-notices")
+    public List<Notice> getMyNotices(@RequestHeader("Authorization") String token) {
+        // Remove "Bearer " prefix
+        String jwt = token.substring(7);
+
+        // Extract username from token
+        String username = jwtHelper.getUsernameFromToken(jwt);
+
+        // Fetch notices created by that user
+        return noticeService.getNoticesByCreatedBy(username);
     }
 
     // update notice
     @PutMapping("/notice/{id}")
     public Notice updateNotice(@PathVariable Long id, @RequestBody NoticeDTO noticeDTO) {
-        return noticeService.updateNotice(id, noticeDTO.getTitle(), noticeDTO.getMessage());
+        return noticeService.updateNotice(id, noticeDTO.getTitle(), noticeDTO.getMessage(),noticeDTO.getEnabled());
     }
+
 
     // list all notices
     @GetMapping("/notices")
@@ -654,12 +685,9 @@ public class AdminController {
     public Notice getNotice(@PathVariable long id){
         return noticeService.getNoticeById(id);
     }
-    //enable/disable
-    @PatchMapping("/notice/{id}/status")
-    public Notice toggleNotice(@PathVariable long id,
-                               @RequestParam boolean enabled){
-        return noticeService.toggleNoticeStatus(id,enabled);
-    }
+
+
+
 
 
 

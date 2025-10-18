@@ -24,6 +24,7 @@ public class HomeController {
         List<User> userList=userService.getUsers();
         return ResponseEntity.ok(userList);
     }
+
     @GetMapping("/current-user")
     public String getLoggedInUser(Principal principal){
         return principal.getName();

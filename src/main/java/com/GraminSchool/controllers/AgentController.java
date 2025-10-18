@@ -1,14 +1,17 @@
 package com.GraminSchool.controllers;
 
 import com.GraminSchool.dto.CourseResponseDTO;
+import com.GraminSchool.dto.NoticeDTO;
 import com.GraminSchool.entity.Notice;
 import com.GraminSchool.entity.Role;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.models.admin.BulkUserRegistrationResponse;
 import com.GraminSchool.models.admin.FailedUserRow;
+import com.GraminSchool.security.JwtHelper;
 import com.GraminSchool.service.CourseService;
 import com.GraminSchool.service.NoticeService;
 import com.GraminSchool.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +32,11 @@ public class AgentController {
     private CourseService courseService;
     @Autowired
     private NoticeService noticeService;
+
+    @Autowired
+    private JwtHelper jwtHelper;
+
+
 
     @GetMapping("/user")
     public ResponseEntity<List<User>> user(){
@@ -103,13 +111,54 @@ public class AgentController {
         List<CourseResponseDTO> courses = courseService.getAllCourses();
         return ResponseEntity.ok(courses);
     }
+
+    // Create notice
+    @PostMapping("/create-notice")
+    public Notice createNotice(@RequestBody NoticeDTO requestNotice, HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return noticeService.createNotice(requestNotice.getTitle(),requestNotice.getMessage(),username,"AGENT");
+    }
+
+    // list all notices
+    @GetMapping("/notices")
+    public List<Notice> getAllNotices(){
+        return noticeService.getAllNotices();
+    }
+
+    //Active Notices
     @GetMapping("/active-notices")
     public List<Notice> getActiveNotices(){
         return noticeService.getActiveNotices();
     }
+
+    //Notice by id
     @GetMapping("/notice/{id}")
     public Notice getNotice(@PathVariable long id){
         return noticeService.getNoticeById(id);
+    }
+    //get list of notices created by current agent user
+    // ✅ Get all notices by role
+    @GetMapping("/notice/role/{role}")
+    public List<Notice> getNoticesByRole(@PathVariable String role) {
+        return noticeService.getNoticesByRole(role);
+    }
+
+    @GetMapping("/notice/my-notices")
+    public List<Notice> getMyNotices(@RequestHeader("Authorization") String token) {
+        // Remove "Bearer " prefix
+        String jwt = token.substring(7);
+
+        // Extract username from token
+        String username = jwtHelper.getUsernameFromToken(jwt);
+
+        // Fetch notices created by that user
+        return noticeService.getNoticesByCreatedBy(username);
     }
 
 

@@ -13,5 +13,6 @@ public class NoticeDTO {
     private String title;
     private String message;
     private String createdBy;
+    private String role;
     private Boolean enabled; // optional, for status toggle if needed
 }
