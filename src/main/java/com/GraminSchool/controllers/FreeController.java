@@ -1,17 +1,19 @@
 package com.GraminSchool.controllers;
 
 import com.GraminSchool.dto.CourseResponseDTO;
+import com.GraminSchool.dto.EnquiryRequestDTO;
+import com.GraminSchool.dto.NoticeDTO;
+import com.GraminSchool.entity.Enquiry;
 import com.GraminSchool.entity.Notice;
 import com.GraminSchool.entity.User;
 import com.GraminSchool.service.CourseService;
+import com.GraminSchool.service.EnquiryService;
 import com.GraminSchool.service.NoticeService;
 import com.GraminSchool.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,6 +26,8 @@ public class FreeController {
     private NoticeService noticeService;
     @Autowired
     private CourseService courseService;
+    @Autowired
+    private EnquiryService enquiryService;
     @GetMapping("/user")
     public ResponseEntity<List<User>> user(){
         System.out.println("Getting users.....");
@@ -44,4 +48,14 @@ public class FreeController {
     public Notice getNotice(@PathVariable long id){
         return noticeService.getNoticeById(id);
     }
+
+    // Create enquiry
+    @PostMapping("/create-enquiry")
+    public Enquiry createEnquiry(@RequestBody EnquiryRequestDTO enquiryRequest) {
+
+        return enquiryService.createEnquiryByGuest(enquiryRequest.getSubject(),enquiryRequest.getEmail(),enquiryRequest.getPhone(),enquiryRequest.getMessage());
+    }
+
+
+
 }
