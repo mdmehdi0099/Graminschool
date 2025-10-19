@@ -2,6 +2,7 @@ package com.GraminSchool.controllers;
 
 import com.GraminSchool.dto.CourseResponseDTO;
 import com.GraminSchool.dto.EnquiryRequestDTO;
+import com.GraminSchool.dto.EnquiryUpdateDTO;
 import com.GraminSchool.dto.NoticeDTO;
 import com.GraminSchool.entity.Enquiry;
 import com.GraminSchool.entity.Notice;
@@ -178,8 +179,53 @@ public class AgentController {
         return enquiryService.createEnquiryByAgent(enquiryRequest.getSubject(),enquiryRequest.getEmail(),enquiryRequest.getPhone(),enquiryRequest.getMessage(),username);
     }
 
-
-
+    @GetMapping("/enquiry/current-user")
+    public List<Enquiry> currentUserEnquiry(@RequestParam(required = false) Boolean resolved,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsername(username);
+    }
+    //getEnquiryByUsernameAndResolution
+    @GetMapping("/enquiry/current-user-pending-enquiry")
+    public List<Enquiry> currentUserPendingEnquiry(@RequestParam(required = false) Boolean resolved,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsernameAndResolution(username,false);
+    }
+    @GetMapping("/enquiry/current-user-resolved-enquiry")
+    public List<Enquiry> currentUserResolvedEnquiry(@RequestParam(required = false) Boolean resolved,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsernameAndResolution(username,true);
+    }
+    //Update enquiry (mark resolved/unresolved + add comments)
+    @PutMapping("/enquiry/update")
+    public ResponseEntity<Enquiry> updateEnquiry(@RequestBody EnquiryUpdateDTO enquiryUpdateDTO,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        Enquiry updatedEnquiry = enquiryService.updateEnquiry(enquiryUpdateDTO,username,"Agent");
+        return ResponseEntity.ok(updatedEnquiry);
+    }
 
 
 }

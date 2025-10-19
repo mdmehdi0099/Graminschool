@@ -61,4 +61,40 @@ public class UserController {
         return enquiryService.createEnquiryByUser(enquiryRequest.getSubject(),enquiryRequest.getEmail(),enquiryRequest.getPhone(),enquiryRequest.getMessage(),username);
     }
 
+    @GetMapping("/enquiry/current-user")
+    public List<Enquiry> currentUserEnquiry(@RequestParam(required = false) Boolean resolved,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsername(username);
+    }
+
+    @GetMapping("/enquiry/current-user-pending-enquiry")
+    public List<Enquiry> currentUserPendingEnquiry(@RequestParam(required = false) Boolean resolved,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsernameAndResolution(username,false);
+    }
+
+    @GetMapping("/enquiry/current-user-resolved-enquiry")
+    public List<Enquiry> currentUserResolvedEnquiry(@RequestParam(required = false) Boolean resolved,HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsernameAndResolution(username,true);
+    }
+
 }

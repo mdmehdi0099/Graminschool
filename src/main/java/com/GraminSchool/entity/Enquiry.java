@@ -34,6 +34,9 @@ public class Enquiry {
     @Column(nullable = false)
     private String message;
     private String createdBy;
+    private String createdByRole;
+    private String closingComment;
+    private String updatedByRole;
     private String resolvedBy;
     private boolean resolved;
     @CreatedDate

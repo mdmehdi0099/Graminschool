@@ -65,6 +65,9 @@ public class AdminController {
     private NoticeService noticeService;
 
     @Autowired
+    private EnquiryService enquiryService;
+
+    @Autowired
     private JwtHelper jwtHelper;
 
     //Getting the list of users
@@ -686,7 +689,83 @@ public class AdminController {
         return noticeService.getNoticeById(id);
     }
 
+    // list all enquiry
+    @GetMapping("/enquiry")
+    public List<Enquiry> getAllEnquiry(){
+        return enquiryService.getAllEnquiry();
+    }
 
+    // list all unresolved enquiry
+    @GetMapping("/enquiry/unreasolved")
+    public List<Enquiry> getUnReasolvedEnquiryList(){
+        return enquiryService.getUnReasolvedEnquiry();
+    }
+
+    // list all resolved enquiry
+    @GetMapping("/enquiry/reasolved")
+    public List<Enquiry> getReasolvedEnquiryList(){
+        return enquiryService.getReasolvedEnquiry();
+    }
+    //getEnquiryByRole Agent
+    @GetMapping("/enquiry/agent-role")
+    public List<Enquiry> getAgentEnquiryList(){
+        return enquiryService.getEnquiryByRole("Agent");
+    }
+    //getEnquiryByRole User
+    @GetMapping("/enquiry/user-role")
+    public List<Enquiry> getUserEnquiryList(){
+        return enquiryService.getEnquiryByRole("User");
+    }
+
+    //getEnquiryByRole Guest
+    @GetMapping("/enquiry/guest-role")
+    public List<Enquiry> getGuestEnquiryList(){
+        return enquiryService.getEnquiryByRole("Guest");
+    }
+    //getEnquiryByRoleAndResolution
+    @GetMapping("/enquiry/pending-guest-enquiry")
+    public List<Enquiry> getPendingGuestEnquiryList(){
+        return enquiryService.getEnquiryByRoleAndResolution("Guest",false);
+    }
+    @GetMapping("/enquiry/resolved-guest-enquiry")
+    public List<Enquiry> getResolvedGuestEnquiryList(){
+        return enquiryService.getEnquiryByRoleAndResolution("Guest",true);
+    }
+    @GetMapping("/enquiry/resolved-user-enquiry")
+    public List<Enquiry> getResolvedUserEnquiryList(){
+        return enquiryService.getEnquiryByRoleAndResolution("User",true);
+    }
+    @GetMapping("/enquiry/pending-user-enquiry")
+    public List<Enquiry> getPendingUserEnquiryList(){
+        return enquiryService.getEnquiryByRoleAndResolution("User",false);
+    }
+    @GetMapping("/enquiry/resolved-agent-enquiry")
+    public List<Enquiry> getResolvedAgentEnquiryList(){
+        return enquiryService.getEnquiryByRoleAndResolution("Agent",true);
+    }
+    @GetMapping("/enquiry/pending-agent-enquiry")
+    public List<Enquiry> getPendingAgentEnquiryList(){
+        return enquiryService.getEnquiryByRoleAndResolution("Agent",false);
+    }
+
+    @GetMapping("/enquiry/current-user")
+    public List<Enquiry> currentUserEnquiry(@RequestParam(required = false) HttpServletRequest request) {
+        //Extract token from Authorization Header
+        String header=request.getHeader("Authorization");
+        if (header==null || !header.startsWith("Bearer ")){
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token=header.substring(7);
+        String username=jwtHelper.getUsernameFromToken(token);
+        return enquiryService.getEnquiryByUsername(username);
+    }
+
+    //Update enquiry (mark resolved/unresolved + add comments)
+    @PutMapping("/enquiry/update")
+    public ResponseEntity<Enquiry> updateEnquiry(@RequestBody EnquiryUpdateDTO enquiryUpdateDTO) {
+        Enquiry updatedEnquiry = enquiryService.updateEnquiry(enquiryUpdateDTO,"Admin","Admin");
+        return ResponseEntity.ok(updatedEnquiry);
+    }
 
 
 
